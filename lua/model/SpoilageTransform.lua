@@ -59,7 +59,13 @@ local SpoilageTransform = ErrorOnInvalidRead.new{
             end
 
             local product = intermediatesDatabase:getIngredientOrProduct(productSpec)
-            local spoilAmount = rawPrototype.spoil_amount or productSpec.amount or 1
+            local spoilAmount = productSpec.amount or 1
+            local hasSpoilAmount, rawSpoilAmount = pcall(function()
+                return rawPrototype.spoil_amount
+            end)
+            if hasSpoilAmount and rawSpoilAmount then
+                spoilAmount = rawSpoilAmount
+            end
             result = AbstractTransform.new({
                 type = "spoilage",
                 inputItem = itemIntermediate,

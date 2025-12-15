@@ -76,25 +76,27 @@ local TransformsDatabase = ErrorOnInvalidRead.new{
     -- * object: table to modify.
     --
     setmetatable = function(object) -- todo: deduplicate the following code
-        if not rawget(object, "spoilage") then
-            object.spoilage = ErrorOnInvalidRead.new()
-        end
-
         setmetatable(object, Metatable)
 
-        ErrorOnInvalidRead.setmetatable(object.boiler)
-        for _,boilerTransform in pairs(object.boiler) do
-            BoilerTransform.setmetatable(boilerTransform)
+        if object.boiler then
+            ErrorOnInvalidRead.setmetatable(object.boiler)
+            for _,boilerTransform in pairs(object.boiler) do
+                BoilerTransform.setmetatable(boilerTransform)
+            end
         end
 
-        ErrorOnInvalidRead.setmetatable(object.fuel)
-        for _,fuelTransform in pairs(object.fuel) do
-            FuelTransform.setmetatable(fuelTransform)
+        if object.fuel then
+            ErrorOnInvalidRead.setmetatable(object.fuel)
+            for _,fuelTransform in pairs(object.fuel) do
+                FuelTransform.setmetatable(fuelTransform)
+            end
         end
 
-        ErrorOnInvalidRead.setmetatable(object.spoilage)
-        for _,spoilageTransform in pairs(object.spoilage) do
-            SpoilageTransform.setmetatable(spoilageTransform)
+        if object.spoilage then
+            ErrorOnInvalidRead.setmetatable(object.spoilage)
+            for _,spoilageTransform in pairs(object.spoilage) do
+                SpoilageTransform.setmetatable(spoilageTransform)
+            end
         end
 
         --[[ErrorOnInvalidRead.setmetatable(object.offshorePump)
@@ -102,19 +104,25 @@ local TransformsDatabase = ErrorOnInvalidRead.new{
             OffshorePumpTransform.setmetatable(offshoreTransform)
         end]]
 
-        ErrorOnInvalidRead.setmetatable(object.tile)
-        for _,tileTransform in pairs(object.tile) do
-            TileTransform.setmetatable(tileTransform)
+        if object.tile then
+            ErrorOnInvalidRead.setmetatable(object.tile)
+            for _,tileTransform in pairs(object.tile) do
+                TileTransform.setmetatable(tileTransform)
+            end
         end
 
-        ErrorOnInvalidRead.setmetatable(object.recipe)
-        for _,recipeTransform in pairs(object.recipe) do
-            RecipeTransform.setmetatable(recipeTransform)
+        if object.recipe then
+            ErrorOnInvalidRead.setmetatable(object.recipe)
+            for _,recipeTransform in pairs(object.recipe) do
+                RecipeTransform.setmetatable(recipeTransform)
+            end
         end
 
-        ErrorOnInvalidRead.setmetatable(object.resource)
-        for _,resourceTransform in pairs(object.resource) do
-            ResourceTransform.setmetatable(resourceTransform)
+        if object.resource then
+            ErrorOnInvalidRead.setmetatable(object.resource)
+            for _,resourceTransform in pairs(object.resource) do
+                ResourceTransform.setmetatable(resourceTransform)
+            end
         end
     end,
 }
