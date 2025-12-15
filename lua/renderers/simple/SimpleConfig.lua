@@ -39,8 +39,8 @@ local SimpleConfig = ErrorOnInvalidRead.new{
 
     -- Map[categoryIndex] -> Color, used to determine the color of the links.
     LinkCategoryToColor = ErrorOnInvalidRead.new{
-        ["layer.forward"] = {r = 1, g = 1, b = 1, a = 1},
-        ["layer.backward"] = {a = 1, r = 1},
+        ["layer.forward"] = {r = 0.6, g = 1, b = 0.6, a = 1},
+        ["layer.backward"] = {a = 1, r = 0.6, g = 0.6, b = 0.6},
     },
 
     -- Radius of the connection circle on links.

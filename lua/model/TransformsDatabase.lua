@@ -19,6 +19,7 @@ local ClassLogger = require("lua/logger/ClassLogger")
 local ErrorOnInvalidRead = require("lua/containers/ErrorOnInvalidRead")
 local FuelTransform = require("lua/model/FuelTransform")
 --local OffshorePumpTransform = require("lua/model/OffshorePumpTransform")
+local SpoilageTransform = require("lua/model/SpoilageTransform")
 local TileTransform = require("lua/model/TileTransform")
 local RecipeTransform = require("lua/model/RecipeTransform")
 local ResourceTransform = require("lua/model/ResourceTransform")
@@ -37,6 +38,7 @@ local Metatable
 -- * fuel[itemName]: Map of FuelTransform, indexed by the fuel item's name.
 -- * intermediates: IntermediatesDatabase holding all the Intermediates in the transforms.
 -- * offshorePump[entityName]: Map of OffshorePumpTransform, indexed by the entity's name.
+-- * spoilage[itemName]: Map of SpoilageTransform, indexed by the spoiled item's name.
 -- * tile[entityName]: Map of TileTransform, indexed by the entity's name.
 -- * producersOf[intermediate]: Set of AbstractTransform having `intermediate` as product.
 -- * recipe[recipeName]: Map of RecipeTransform, indexed by the recipe's name.
@@ -56,6 +58,7 @@ local TransformsDatabase = ErrorOnInvalidRead.new{
         object.boiler = ErrorOnInvalidRead.new()
         object.fuel = ErrorOnInvalidRead.new()
         --object.offshorePump = ErrorOnInvalidRead.new()
+        object.spoilage = ErrorOnInvalidRead.new()
         object.tile = ErrorOnInvalidRead.new()
         object.recipe = ErrorOnInvalidRead.new()
         object.resource = ErrorOnInvalidRead.new()
@@ -83,6 +86,11 @@ local TransformsDatabase = ErrorOnInvalidRead.new{
         ErrorOnInvalidRead.setmetatable(object.fuel)
         for _,fuelTransform in pairs(object.fuel) do
             FuelTransform.setmetatable(fuelTransform)
+        end
+
+        ErrorOnInvalidRead.setmetatable(object.spoilage)
+        for _,spoilageTransform in pairs(object.spoilage) do
+            SpoilageTransform.setmetatable(spoilageTransform)
         end
 
         --[[ErrorOnInvalidRead.setmetatable(object.offshorePump)
@@ -120,6 +128,7 @@ Metatable = {
             self.boiler = ErrorOnInvalidRead.new()
             self.fuel = ErrorOnInvalidRead.new()
             --self.offshorePump = ErrorOnInvalidRead.new()
+            self.spoilage = ErrorOnInvalidRead.new()
             self.tile = ErrorOnInvalidRead.new()
             self.recipe = ErrorOnInvalidRead.new()
             self.resource = ErrorOnInvalidRead.new()
@@ -150,6 +159,7 @@ Metatable = {
 
             for _,item in pairs(self.intermediates.item) do
                 tryAddTransform(self, item.rawPrototype.name, FuelTransform.tryMake(item, self.intermediates))
+                tryAddTransform(self, item.rawPrototype.name, SpoilageTransform.tryMake(item, self.intermediates))
             end
         end,
     }

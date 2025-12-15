@@ -18,6 +18,7 @@ local BoilerTransform = require("lua/model/BoilerTransform")
 local ErrorOnInvalidRead = require("lua/containers/ErrorOnInvalidRead")
 local FuelTransform = require("lua/model/FuelTransform")
 local Intermediate = require("lua/model/Intermediate")
+local SpoilageTransform = require("lua/model/SpoilageTransform")
 local RecipeTransform = require("lua/model/RecipeTransform")
 
 -- Some constants for the SelectionWindow & panels.
@@ -35,6 +36,12 @@ local GuiSelectionConstants = ErrorOnInvalidRead.new{
             name = "edgeTypeIcon",
             sprite = "dana-fuel-icon",
             tooltip = FuelTransform.TypeLocalisedStr,
+        },
+        spoilage = {
+            type = "sprite",
+            name = "edgeTypeIcon",
+            sprite = "dana-recipe-icon",
+            tooltip = SpoilageTransform.TypeLocalisedStr,
         },
         recipe = {
             type = "sprite",
