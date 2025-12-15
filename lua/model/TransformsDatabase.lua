@@ -76,6 +76,10 @@ local TransformsDatabase = ErrorOnInvalidRead.new{
     -- * object: table to modify.
     --
     setmetatable = function(object) -- todo: deduplicate the following code
+        if not rawget(object, "spoilage") then
+            object.spoilage = ErrorOnInvalidRead.new()
+        end
+
         setmetatable(object, Metatable)
 
         ErrorOnInvalidRead.setmetatable(object.boiler)
