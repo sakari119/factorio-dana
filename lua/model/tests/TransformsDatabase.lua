@@ -65,6 +65,9 @@ describe("TransformsDatabase", function()
                     type = "item",
                     name = "fruit",
                     spoil_result = "rotten",
+                    get_spoil_ticks = function()
+                        return 120
+                    end,
                 },
             },
             ["offshore-pump"] = {

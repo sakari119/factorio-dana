@@ -31,8 +31,10 @@ describe("SpoilageTransform", function()
                 fresh = {
                     type = "item",
                     name = "fresh",
-                    spoil_result = {type = "item", name = "spoiled", amount = 2},
-                    spoil_amount = 2,
+                    spoil_result = {type = "item", name = "spoiled"},
+                    get_spoil_ticks = function()
+                        return 60
+                    end,
                 },
                 stable = {type = "item", name = "stable"},
             },
@@ -48,7 +50,7 @@ describe("SpoilageTransform", function()
             local object = SpoilageTransform.tryMake(fresh, intermediates)
             assert.are.same(object, {
                 ingredients = {
-                    [fresh] = 2,
+                    [fresh] = 1,
                 },
                 inputItem = fresh,
                 localisedName = {
@@ -57,10 +59,10 @@ describe("SpoilageTransform", function()
                     fresh.rawPrototype.localised_name,
                 },
                 products = {
-                    [spoiled] = ProductData.make(ProductAmount.makeConstant(2)),
+                    [spoiled] = ProductData.make(ProductAmount.makeConstant(1)),
                 },
                 type = "spoilage",
-                spoilResult = fresh.rawPrototype.spoil_result,
+                spoilResult = {type = "item", name = "spoiled"},
                 spritePath = spoiled.spritePath,
             })
         end)

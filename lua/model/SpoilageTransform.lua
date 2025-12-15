@@ -51,27 +51,30 @@ local SpoilageTransform = ErrorOnInvalidRead.new{
     tryMake = function(itemIntermediate, intermediatesDatabase)
         local result = nil
         local rawPrototype = itemIntermediate.rawPrototype
-        local spoil_result = rawPrototype.spoil_result
-        if spoil_result then
-            local productSpec = spoil_result
-            if type(spoil_result) == "string" then
-                productSpec = {name = spoil_result, type = "item"}
+        local spoilResultPrototype = rawPrototype.spoil_result
+        local spoilTicks = 0
+        if rawPrototype.get_spoil_ticks then
+            local ok, ticks = pcall(rawPrototype.get_spoil_ticks, rawPrototype)
+            if ok then
+                spoilTicks = ticks
+            end
+        end
+
+        if spoilResultPrototype and spoilTicks ~= 0 then
+            local productSpec
+            if type(spoilResultPrototype) == "string" then
+                productSpec = {name = spoilResultPrototype, type = "item"}
+            else
+                productSpec = {name = spoilResultPrototype.name, type = spoilResultPrototype.type or "item"}
             end
 
             local product = intermediatesDatabase:getIngredientOrProduct(productSpec)
-            local spoilAmount = productSpec.amount or 1
-            local hasSpoilAmount, rawSpoilAmount = pcall(function()
-                return rawPrototype.spoil_amount
-            end)
-            if hasSpoilAmount and rawSpoilAmount then
-                spoilAmount = rawSpoilAmount
-            end
             result = AbstractTransform.new({
                 type = "spoilage",
                 inputItem = itemIntermediate,
                 spoilResult = productSpec,
             }, Metatable)
-            result:addIngredient(itemIntermediate, spoilAmount)
+            result:addIngredient(itemIntermediate, 1)
             result:addProduct(product, ProductAmount.makeConstant(productSpec.amount or 1))
         end
         return result
