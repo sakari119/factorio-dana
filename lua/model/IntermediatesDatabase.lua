@@ -17,6 +17,14 @@
 local ErrorOnInvalidRead = require("lua/containers/ErrorOnInvalidRead")
 local Intermediate = require("lua/model/Intermediate")
 
+local function iterPrototypes(collection)
+    local mt = getmetatable(collection)
+    if mt and mt.__pairs then
+        return mt.__pairs(collection)
+    end
+    return pairs(collection or {})
+end
+
 local Metatable
 
 -- Class holding a set of Intermediate objects.
@@ -70,7 +78,7 @@ Metatable = {
         --
         rebuild = function(self, gameScript)
             local fluids = ErrorOnInvalidRead.new()
-            for _,fluid in pairs(prototypes.fluid) do
+            for _,fluid in iterPrototypes(gameScript.fluid_prototypes) do
                 fluids[fluid.name] = Intermediate.new{
                     type = "fluid",
                     rawPrototype = fluid,
@@ -79,7 +87,7 @@ Metatable = {
             self.fluid = fluids
 
             local items = ErrorOnInvalidRead.new()
-            for _,item in pairs(prototypes.item) do
+            for _,item in iterPrototypes(gameScript.item_prototypes) do
                 items[item.name] = Intermediate.new{
                     type = "item",
                     rawPrototype = item,

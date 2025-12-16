@@ -49,12 +49,21 @@ local SpoilageTransform = ErrorOnInvalidRead.new{
     -- Returns: The new SpoilageTransform if the item spoils. Nil otherwise.
     --
     tryMake = function(itemIntermediate, intermediatesDatabase)
-        local result = nil
+        local transform = nil
         local rawPrototype = itemIntermediate.rawPrototype
-        local spoilResultPrototype = rawPrototype.spoil_result
+        local spoilResultPrototype
+        local ok, spoilResult = pcall(function()
+            return rawPrototype.spoil_result
+        end)
+        if ok then
+            spoilResultPrototype = spoilResult
+        end
         local spoilTicks = 0
-        if rawPrototype.get_spoil_ticks then
-            local ok, ticks = pcall(rawPrototype.get_spoil_ticks, rawPrototype)
+        local okSpoilGetter, spoilGetter = pcall(function()
+            return rawPrototype.get_spoil_ticks
+        end)
+        if okSpoilGetter and spoilGetter then
+            local ok, ticks = pcall(spoilGetter, rawPrototype)
             if ok then
                 spoilTicks = ticks
             end
@@ -69,15 +78,15 @@ local SpoilageTransform = ErrorOnInvalidRead.new{
             end
 
             local product = intermediatesDatabase:getIngredientOrProduct(productSpec)
-            result = AbstractTransform.new({
+            transform = AbstractTransform.new({
                 type = "spoilage",
                 inputItem = itemIntermediate,
                 spoilResult = productSpec,
             }, Metatable)
-            result:addIngredient(itemIntermediate, 1)
-            result:addProduct(product, ProductAmount.makeConstant(productSpec.amount or 1))
+            transform:addIngredient(itemIntermediate, 1)
+            transform:addProduct(product, ProductAmount.makeConstant(productSpec.amount or 1))
         end
-        return result
+        return transform
     end,
 
     -- LocalisedString representing the type.

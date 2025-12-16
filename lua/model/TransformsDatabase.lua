@@ -27,6 +27,23 @@ local TableUtils = require("lua/containers/TableUtils")
 
 local cLogger = ClassLogger.new{className = "TransformsDatabase"}
 
+local function iterPrototypes(collection)
+    local mt = getmetatable(collection)
+    if mt and mt.__pairs then
+        return mt.__pairs(collection)
+    end
+    return pairs(collection or {})
+end
+
+local function getPrototypeCollection(gameScript, index)
+    local ok, result = pcall(function()
+        return gameScript[index]
+    end)
+    if ok then
+        return result
+    end
+end
+
 local tryAddTransform
 local Metatable
 
@@ -147,7 +164,7 @@ Metatable = {
             self.consumersOf = {}
             self.producersOf = {}
 
-            for _,entity in pairs(prototypes.entity) do
+            for _,entity in iterPrototypes(gameScript.entity_prototypes) do
                 local transform = nil
                 if entity.type == "resource" then
                     transform = ResourceTransform.tryMake(entity, self.intermediates)
@@ -161,11 +178,12 @@ Metatable = {
                 tryAddTransform(self, entity.name, transform)
             end
 
-            for _,tile in pairs(prototypes.tile) do
+            local tilePrototypes = getPrototypeCollection(gameScript, "tile_prototypes")
+            for _,tile in iterPrototypes(tilePrototypes) do
                 tryAddTransform(self, tile.name, TileTransform.tryMake(tile, self.intermediates))
             end
 
-            for _,rawRecipe in pairs(prototypes.recipe) do
+            for _,rawRecipe in iterPrototypes(gameScript.recipe_prototypes) do
                 tryAddTransform(self, rawRecipe.name, RecipeTransform.make(rawRecipe, self.intermediates))
             end
 
