@@ -25,6 +25,16 @@ local function iterPrototypes(collection)
     return pairs(collection or {})
 end
 
+local function safePrototypes(gameScript, fieldName)
+    local ok, value = pcall(function()
+        return gameScript[fieldName]
+    end)
+    if not ok then
+        return nil
+    end
+    return value
+end
+
 local Metatable
 
 -- Class holding a set of Intermediate objects.
@@ -78,7 +88,7 @@ Metatable = {
         --
         rebuild = function(self, gameScript)
             local fluids = ErrorOnInvalidRead.new()
-            for _,fluid in iterPrototypes(gameScript.fluid_prototypes) do
+            for _,fluid in iterPrototypes(safePrototypes(gameScript, "fluid_prototypes")) do
                 fluids[fluid.name] = Intermediate.new{
                     type = "fluid",
                     rawPrototype = fluid,
@@ -87,7 +97,7 @@ Metatable = {
             self.fluid = fluids
 
             local items = ErrorOnInvalidRead.new()
-            for _,item in iterPrototypes(gameScript.item_prototypes) do
+            for _,item in iterPrototypes(safePrototypes(gameScript, "item_prototypes")) do
                 items[item.name] = Intermediate.new{
                     type = "item",
                     rawPrototype = item,
