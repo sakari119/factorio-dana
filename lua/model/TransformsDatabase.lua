@@ -164,7 +164,7 @@ Metatable = {
             self.consumersOf = {}
             self.producersOf = {}
 
-            for _,entity in iterPrototypes(gameScript.entity_prototypes) do
+            for _,entity in iterPrototypes(getPrototypeCollection(gameScript, "entity_prototypes")) do
                 local transform = nil
                 if entity.type == "resource" then
                     transform = ResourceTransform.tryMake(entity, self.intermediates)
@@ -183,7 +183,7 @@ Metatable = {
                 tryAddTransform(self, tile.name, TileTransform.tryMake(tile, self.intermediates))
             end
 
-            for _,rawRecipe in iterPrototypes(gameScript.recipe_prototypes) do
+            for _,rawRecipe in iterPrototypes(getPrototypeCollection(gameScript, "recipe_prototypes")) do
                 tryAddTransform(self, rawRecipe.name, RecipeTransform.make(rawRecipe, self.intermediates))
             end
 
