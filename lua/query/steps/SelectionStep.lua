@@ -72,6 +72,9 @@ Metatable = {
             for _,fuel in pairs(force.prototypes.transforms.fuel) do
                 addTransform(self, result, fuel)
             end
+            for _,spoilage in pairs(force.prototypes.transforms.spoilage) do
+                addTransform(self, result, spoilage)
+            end
 
             return result
         end,

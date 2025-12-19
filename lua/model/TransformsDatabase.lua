@@ -19,12 +19,30 @@ local ClassLogger = require("lua/logger/ClassLogger")
 local ErrorOnInvalidRead = require("lua/containers/ErrorOnInvalidRead")
 local FuelTransform = require("lua/model/FuelTransform")
 --local OffshorePumpTransform = require("lua/model/OffshorePumpTransform")
+local SpoilageTransform = require("lua/model/SpoilageTransform")
 local TileTransform = require("lua/model/TileTransform")
 local RecipeTransform = require("lua/model/RecipeTransform")
 local ResourceTransform = require("lua/model/ResourceTransform")
 local TableUtils = require("lua/containers/TableUtils")
 
 local cLogger = ClassLogger.new{className = "TransformsDatabase"}
+
+local function iterPrototypes(collection)
+    local mt = getmetatable(collection)
+    if mt and mt.__pairs then
+        return mt.__pairs(collection)
+    end
+    return pairs(collection or {})
+end
+
+local function getPrototypeCollection(gameScript, index)
+    local ok, result = pcall(function()
+        return gameScript[index]
+    end)
+    if ok then
+        return result
+    end
+end
 
 local tryAddTransform
 local Metatable
@@ -37,6 +55,7 @@ local Metatable
 -- * fuel[itemName]: Map of FuelTransform, indexed by the fuel item's name.
 -- * intermediates: IntermediatesDatabase holding all the Intermediates in the transforms.
 -- * offshorePump[entityName]: Map of OffshorePumpTransform, indexed by the entity's name.
+-- * spoilage[itemName]: Map of SpoilageTransform, indexed by the spoiled item's name.
 -- * tile[entityName]: Map of TileTransform, indexed by the entity's name.
 -- * producersOf[intermediate]: Set of AbstractTransform having `intermediate` as product.
 -- * recipe[recipeName]: Map of RecipeTransform, indexed by the recipe's name.
@@ -56,6 +75,7 @@ local TransformsDatabase = ErrorOnInvalidRead.new{
         object.boiler = ErrorOnInvalidRead.new()
         object.fuel = ErrorOnInvalidRead.new()
         --object.offshorePump = ErrorOnInvalidRead.new()
+        object.spoilage = ErrorOnInvalidRead.new()
         object.tile = ErrorOnInvalidRead.new()
         object.recipe = ErrorOnInvalidRead.new()
         object.resource = ErrorOnInvalidRead.new()
@@ -75,14 +95,25 @@ local TransformsDatabase = ErrorOnInvalidRead.new{
     setmetatable = function(object) -- todo: deduplicate the following code
         setmetatable(object, Metatable)
 
-        ErrorOnInvalidRead.setmetatable(object.boiler)
-        for _,boilerTransform in pairs(object.boiler) do
-            BoilerTransform.setmetatable(boilerTransform)
+        if object.boiler then
+            ErrorOnInvalidRead.setmetatable(object.boiler)
+            for _,boilerTransform in pairs(object.boiler) do
+                BoilerTransform.setmetatable(boilerTransform)
+            end
         end
 
-        ErrorOnInvalidRead.setmetatable(object.fuel)
-        for _,fuelTransform in pairs(object.fuel) do
-            FuelTransform.setmetatable(fuelTransform)
+        if object.fuel then
+            ErrorOnInvalidRead.setmetatable(object.fuel)
+            for _,fuelTransform in pairs(object.fuel) do
+                FuelTransform.setmetatable(fuelTransform)
+            end
+        end
+
+        if object.spoilage then
+            ErrorOnInvalidRead.setmetatable(object.spoilage)
+            for _,spoilageTransform in pairs(object.spoilage) do
+                SpoilageTransform.setmetatable(spoilageTransform)
+            end
         end
 
         --[[ErrorOnInvalidRead.setmetatable(object.offshorePump)
@@ -90,19 +121,25 @@ local TransformsDatabase = ErrorOnInvalidRead.new{
             OffshorePumpTransform.setmetatable(offshoreTransform)
         end]]
 
-        ErrorOnInvalidRead.setmetatable(object.tile)
-        for _,tileTransform in pairs(object.tile) do
-            TileTransform.setmetatable(tileTransform)
+        if object.tile then
+            ErrorOnInvalidRead.setmetatable(object.tile)
+            for _,tileTransform in pairs(object.tile) do
+                TileTransform.setmetatable(tileTransform)
+            end
         end
 
-        ErrorOnInvalidRead.setmetatable(object.recipe)
-        for _,recipeTransform in pairs(object.recipe) do
-            RecipeTransform.setmetatable(recipeTransform)
+        if object.recipe then
+            ErrorOnInvalidRead.setmetatable(object.recipe)
+            for _,recipeTransform in pairs(object.recipe) do
+                RecipeTransform.setmetatable(recipeTransform)
+            end
         end
 
-        ErrorOnInvalidRead.setmetatable(object.resource)
-        for _,resourceTransform in pairs(object.resource) do
-            ResourceTransform.setmetatable(resourceTransform)
+        if object.resource then
+            ErrorOnInvalidRead.setmetatable(object.resource)
+            for _,resourceTransform in pairs(object.resource) do
+                ResourceTransform.setmetatable(resourceTransform)
+            end
         end
     end,
 }
@@ -120,13 +157,14 @@ Metatable = {
             self.boiler = ErrorOnInvalidRead.new()
             self.fuel = ErrorOnInvalidRead.new()
             --self.offshorePump = ErrorOnInvalidRead.new()
+            self.spoilage = ErrorOnInvalidRead.new()
             self.tile = ErrorOnInvalidRead.new()
             self.recipe = ErrorOnInvalidRead.new()
             self.resource = ErrorOnInvalidRead.new()
             self.consumersOf = {}
             self.producersOf = {}
 
-            for _,entity in pairs(prototypes.entity) do
+            for _,entity in iterPrototypes(getPrototypeCollection(gameScript, "entity_prototypes")) do
                 local transform = nil
                 if entity.type == "resource" then
                     transform = ResourceTransform.tryMake(entity, self.intermediates)
@@ -140,16 +178,18 @@ Metatable = {
                 tryAddTransform(self, entity.name, transform)
             end
 
-            for _,tile in pairs(prototypes.tile) do
+            local tilePrototypes = getPrototypeCollection(gameScript, "tile_prototypes")
+            for _,tile in iterPrototypes(tilePrototypes) do
                 tryAddTransform(self, tile.name, TileTransform.tryMake(tile, self.intermediates))
             end
 
-            for _,rawRecipe in pairs(prototypes.recipe) do
+            for _,rawRecipe in iterPrototypes(getPrototypeCollection(gameScript, "recipe_prototypes")) do
                 tryAddTransform(self, rawRecipe.name, RecipeTransform.make(rawRecipe, self.intermediates))
             end
 
             for _,item in pairs(self.intermediates.item) do
                 tryAddTransform(self, item.rawPrototype.name, FuelTransform.tryMake(item, self.intermediates))
+                tryAddTransform(self, item.rawPrototype.name, SpoilageTransform.tryMake(item, self.intermediates))
             end
         end,
     }

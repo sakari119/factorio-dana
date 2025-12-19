@@ -20,6 +20,14 @@ local ForceRecipe = require("lua/model/ForceRecipe")
 
 local cLogger = ClassLogger.new{className = "Force"}
 
+local function iterCollection(collection)
+    local mt = getmetatable(collection)
+    if mt and mt.__pairs then
+        return mt.__pairs(collection)
+    end
+    return pairs(collection or {})
+end
+
 local Metatable
 
 -- Wrapper of Factorio's LuaForce class.
@@ -72,7 +80,7 @@ Metatable = {
             local rawForce = self.rawForce
 
             local recipes = ErrorOnInvalidRead.new()
-            for recipeName,recipe in pairs(rawForce.recipes) do
+            for recipeName,recipe in iterCollection(rawForce.recipes) do
                 recipes[recipeName] = ForceRecipe.make(recipe, prototypes.transforms)
             end
 

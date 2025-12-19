@@ -21,6 +21,7 @@ local LuaGameScript = require("lua/testing/mocks/LuaGameScript")
 local OffshorePumpTransform = require("lua/model/OffshorePumpTransform")
 local RecipeTransform = require("lua/model/RecipeTransform")
 local ResourceTransform = require("lua/model/ResourceTransform")
+local SpoilageTransform = require("lua/model/SpoilageTransform")
 local SaveLoadTester = require("lua/testing/SaveLoadTester")
 local TransformsDatabase = require("lua/model/TransformsDatabase")
 
@@ -54,10 +55,19 @@ describe("TransformsDatabase", function()
                 ash = {type = "item", name = "ash"},
                 barrel = {type = "item", name = "barrel"},
                 ["barreled-water"] = {type = "item", name = "barreled-water"},
+                rotten = {type = "item", name = "rotten"},
                 wood = {
                     type = "item",
                     name = "wood",
                     burnt_result = "ash",
+                },
+                fruit = {
+                    type = "item",
+                    name = "fruit",
+                    spoil_result = "rotten",
+                    get_spoil_ticks = function()
+                        return 120
+                    end,
                 },
             },
             ["offshore-pump"] = {
@@ -105,6 +115,7 @@ describe("TransformsDatabase", function()
         assert.is_not_nil(database.boiler)
         assert.is_not_nil(database.fuel)
         assert.is_not_nil(database.offshorePump)
+        assert.is_not_nil(database.spoilage)
         assert.is_not_nil(database.recipe)
         assert.is_not_nil(database.resource)
         assert.is_not_nil(database.producersOf)
@@ -138,6 +149,9 @@ describe("TransformsDatabase", function()
             resource = {
                 ["wood-ore"] = ResourceTransform.tryMake(woodOre, intermediates),
             },
+            spoilage = {
+                fruit = SpoilageTransform.tryMake(intermediates.item.fruit, intermediates),
+            },
             consumersOf = {
                 [intermediates.fluid.water] = {
                     [transforms.recipe["fill-water-barrel"]] = true,
@@ -145,6 +159,7 @@ describe("TransformsDatabase", function()
                 },
                 [intermediates.item.wood] = {[transforms.fuel.wood] = true},
                 [intermediates.item.barrel] = {[transforms.recipe["fill-water-barrel"]] = true},
+                [intermediates.item.fruit] = {[transforms.spoilage.fruit] = true},
             },
             producersOf = {
                 [intermediates.fluid.steam] = {[transforms.boiler.myBoiler] = true},
@@ -152,6 +167,7 @@ describe("TransformsDatabase", function()
                 [intermediates.fluid.water] = {[transforms.offshorePump.well] = true},
                 [intermediates.item.wood] = {[transforms.resource["wood-ore"]] = true},
                 [intermediates.item["barreled-water"]] = {[transforms.recipe["fill-water-barrel"]] = true},
+                [intermediates.item.rotten] = {[transforms.spoilage.fruit] = true},
             },
         })
     end)
